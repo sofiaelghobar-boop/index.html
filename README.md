@@ -25,7 +25,7 @@
 
 <!-- SVUH Dietetics Logo -->
 <div style="text-align:center; margin-bottom:15px;">
-  <img src="svuh-logo.png" alt="SVUH Dietetics" style="max-width:200px;">
+  <img src="IMG_4549.jpeg" alt="SVUH Dietetics" style="max-width:200px;">
 </div>
 
 <h2>MUST Screening Tool</h2>
@@ -127,7 +127,7 @@ function calc(){
     let riskText = "";
     if(calfInput){
       riskText = calfInput >= 31 ? "Low risk" : "Increased risk";
-      warnings += `⚠ Calf circumference used as alternative pathway.<br>`;
+      warnings += "⚠ Calf circumference used as alternative pathway.<br>";
     } else {
       riskText = ">23.5 cm = Low risk<br>≤23.5 cm = Increased risk";
       warnings += "⚠ MUAC used as alternative pathway.<br>";
