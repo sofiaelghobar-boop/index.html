@@ -18,6 +18,9 @@
     .medium { background:#fff3cd;}
     .high { background:#f8d7da;}
     .warning { background:#e2e3e5; padding:10px; border-radius:6px; margin-top:10px;}
+    .qr-container { text-align:center; margin-top:30px; }
+    .qr-container img { max-width:200px; margin-bottom:10px; }
+    .qr-container p { font-weight:bold; font-size:16px; }
   </style>
 </head>
 
@@ -99,6 +102,13 @@
 
 <div id="result"></div>
 
+<!-- QR Code Section -->
+<div class="qr-container">
+  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://USERNAME.github.io/REPO/" 
+       alt="SVUH MUST Screening Tool QR">
+  <p>SVUH MUST Screening Tool – Dietetics</p>
+</div>
+
 <script>
 function showAmputeeType(){
   let a = document.getElementById("amputee").value;
@@ -123,7 +133,6 @@ function calc(){
     warnings += "⚠ Oedema may falsely increase weight.<br>";
   }
 
-  // MUAC or calf circumference pathway
   if(muac === "yes" || calfInput){
     let riskText = "";
     if(calfInput){
@@ -149,14 +158,12 @@ function calc(){
     return;
   }
 
-  // Amputee adjustment
   if(amputee === "yes"){
     let adjustment = parseFloat(document.getElementById("amputeeType").value);
     w = w / (1 - adjustment/100);
     warnings += "⚠ Weight adjusted for amputation.<br>";
   }
 
-  // Estimate height from ulna
   let h;
   if(!hInput && ulnaInput){
     h = ulnaInput*4.67 + 70.9;
@@ -170,17 +177,14 @@ function calc(){
     return;
   }
 
-  // BMI
   let bmi = w / ((h/100)*(h/100));
   let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 ? 1 : 0);
 
-  // Increase BMI score if oedema present
   if(oedema === "yes" && bmiScore < 2){
     bmiScore += 1;
     warnings += "⚠ BMI score increased due to presence of oedema.<br>";
   }
 
-  // Weight loss scoring
   let wlScore = 0;
   if(wlSelect === "auto" && prevW){
     let percentLoss = ((prevW - w) / prevW) * 100;
@@ -195,7 +199,6 @@ function calc(){
     wlScore = parseInt(wlSelect);
   }
 
-  // Total MUST score
   let total = bmiScore + wlScore + acute;
 
   let text = "";
