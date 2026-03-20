@@ -23,6 +23,11 @@
 
 <body>
 
+<!-- SVUH Dietetics Logo -->
+<div style="text-align:center; margin-bottom:15px;">
+  <img src="svuh-logo.png" alt="SVUH Dietetics" style="max-width:200px;">
+</div>
+
 <h2>MUST Screening Tool</h2>
 
 <h3>Patient Considerations</h3>
@@ -34,23 +39,38 @@
 </select>
 
 <label>Amputee?</label>
-<select id="amputee">
+<select id="amputee" onchange="showAmputeeType()">
   <option value="no">No</option>
   <option value="yes">Yes</option>
 </select>
 
-<label>Unable to weigh/measure?</label>
+<div id="amputeeDiv" style="display:none;">
+  <label>Type of amputation</label>
+  <select id="amputeeType">
+    <option value="16">Entire leg</option>
+    <option value="6">Lower leg</option>
+    <option value="1.5">Foot</option>
+    <option value="5">Entire arm</option>
+    <option value="2.3">Forearm</option>
+    <option value="0.7">Hand</option>
+  </select>
+</div>
+
+<label>Unable to weigh/measure height?</label>
 <select id="muac">
   <option value="no">No</option>
   <option value="yes">Yes</option>
 </select>
 
-<h3>1. BMI</h3>
+<h3>1. Weight & Height</h3>
 <label>Current Weight (kg)</label>
 <input type="number" id="weight">
 
 <label>Height (cm)</label>
 <input type="number" id="height">
+
+<label>Optional: Ulna length (cm) if height not measurable</label>
+<input type="number" id="ulna" placeholder="e.g., 25.5">
 
 <h3>2. Weight Loss</h3>
 <label>Previous Weight (kg) (3–6 months ago)</label>
@@ -68,7 +88,7 @@
 <h3>3. Acute Illness</h3>
 <select id="acute">
   <option value="0">No</option>
-  <option value="2">Yes (no intake >5 days)</option>
+  <option value="2">Yes (no intake &gt;5 days)</option>
 </select>
 
 <button onclick="calc()">Calculate MUST</button>
@@ -76,10 +96,15 @@
 <div id="result"></div>
 
 <script>
-function calc(){
+function showAmputeeType(){
+  let a = document.getElementById("amputee").value;
+  document.getElementById("amputeeDiv").style.display = (a==="yes") ? "block" : "none";
+}
 
+function calc(){
   let w = parseFloat(document.getElementById("weight").value);
-  let h = parseFloat(document.getElementById("height").value);
+  let hInput = parseFloat(document.getElementById("height").value);
+  let ulnaInput = parseFloat(document.getElementById("ulna").value);
   let prevW = parseFloat(document.getElementById("prevWeight").value);
   let wlSelect = document.getElementById("weightLossSelect").value;
   let acute = parseInt(document.getElementById("acute").value);
@@ -93,48 +118,70 @@ function calc(){
     warnings += "⚠ Oedema may falsely increase weight.<br>";
   }
 
-  if(amputee === "yes"){
-    warnings += "⚠ Adjust weight for amputation before interpreting BMI.<br>";
-  }
-
+  // MUAC fallback
   if(muac === "yes"){
     document.getElementById("result").innerHTML =
       `<div class="box medium">
         <b>USE MUAC PATHWAY</b><br><br>
         >23.5 cm = Low risk<br>
-        <23.5 cm = Increased risk<br><br>
+        ≤23.5 cm = Increased risk<br><br>
         <b>Action:</b> Consider dietitian referral if concerns
       </div>`;
     return;
   }
 
-  if(!w || !h){
-    alert("Enter weight and height");
+  if(!w){
+    alert("Enter weight");
     return;
   }
 
+  // Amputee adjustment
+  if(amputee === "yes"){
+    let adjustment = parseFloat(document.getElementById("amputeeType").value); // % missing
+    w = w / (1 - adjustment/100);
+    warnings += "⚠ Weight adjusted for amputation.<br>";
+  }
+
+  // Estimate height from ulna
+  let h;
+  if(!hInput && ulnaInput){
+    h = ulnaInput*4.67 + 70.9;
+    warnings += "⚠ Height estimated from ulna length.<br>";
+  } else {
+    h = hInput;
+  }
+
+  if(!h){
+    alert("Enter height or ulna length");
+    return;
+  }
+
+  // BMI
   let bmi = w / ((h/100)*(h/100));
   let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 ? 1 : 0);
 
-  let wlScore = 0;
+  // Increase BMI score if oedema present
+  if(oedema === "yes" && bmiScore < 2){
+    bmiScore += 1;
+    warnings += "⚠ BMI score increased due to presence of oedema.<br>";
+  }
 
+  // Weight loss scoring
+  let wlScore = 0;
   if(wlSelect === "auto" && prevW){
     let percentLoss = ((prevW - w) / prevW) * 100;
-
     if(percentLoss < 5) wlScore = 0;
     else if(percentLoss < 10) wlScore = 1;
     else wlScore = 2;
-
     warnings += `Weight loss: ${percentLoss.toFixed(1)}%<br>`;
-  }
-  else if(wlSelect === "unknown"){
+  } else if(wlSelect === "unknown"){
     wlScore = 1;
     warnings += "⚠ Weight loss unknown — assume moderate risk<br>";
-  }
-  else{
+  } else {
     wlScore = parseInt(wlSelect);
   }
 
+  // Total MUST score
   let total = bmiScore + wlScore + acute;
 
   let text = "";
@@ -143,20 +190,22 @@ function calc(){
   if(total === 0){
     style="low";
     text = "Routine care<br>Rescreen weekly";
-  }
-  else if(total === 1){
+  } else if(total === 1){
     style="medium";
     text = "Start food chart<br>Encourage intake<br>Repeat screening";
-  }
-  else{
+  } else {
     style="high";
     text = "<b>Refer to dietitian TODAY</b><br>Food + fluid chart<br>Consider supplements<br>Escalate if intake poor";
   }
 
+  // Display component scores + total
   document.getElementById("result").innerHTML =
     `<div class="box ${style}">
-      <b>BMI:</b> ${bmi.toFixed(1)}<br>
-      <b>Total Score:</b> ${total}<br><br>
+      <b>MUST Component Scores:</b><br>
+      BMI Score: ${bmiScore}<br>
+      Weight Loss Score: ${wlScore}<br>
+      Acute Illness Score: ${acute}<br>
+      <b>Total MUST Score:</b> ${total}<br><br>
       ${text}
       <div class="warning">${warnings}</div>
     </div>`;
