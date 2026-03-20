@@ -25,14 +25,12 @@
 
 <!-- SVUH Dietetics Logo -->
 <div style="text-align:center; margin-bottom:15px;">
-  <img src="https://raw.githubusercontent.com/USERNAME/REPO/main/IMG_4549.jpeg" 
-       alt="SVUH Dietetics" style="max-width:200px;">
+  <img src="PASTE_FULL_URL_HERE" alt="SVUH Dietetics" style="max-width:200px;">
 </div>
 
 <h2>MUST Screening Tool</h2>
 
 <h3>Patient Considerations</h3>
-
 <label>Oedema / fluid overload?</label>
 <select id="oedema">
   <option value="no">No</option>
@@ -174,7 +172,6 @@ function calc(){
   let bmi = w / ((h/100)*(h/100));
   let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 ? 1 : 0);
 
-  // Increase BMI score if oedema present
   if(oedema === "yes" && bmiScore < 2){
     bmiScore += 1;
     warnings += "⚠ BMI score increased due to presence of oedema.<br>";
