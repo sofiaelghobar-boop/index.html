@@ -72,6 +72,9 @@
 <label>Optional: Ulna length (cm) if height not measurable</label>
 <input type="number" id="ulna" placeholder="e.g., 25.5">
 
+<label>Optional: Calf Circumference (cm) if weight/height not measurable</label>
+<input type="number" id="calf" placeholder="e.g., 31">
+
 <h3>2. Weight Loss</h3>
 <label>Previous Weight (kg) (3–6 months ago)</label>
 <input type="number" id="prevWeight">
@@ -111,6 +114,7 @@ function calc(){
   let oedema = document.getElementById("oedema").value;
   let amputee = document.getElementById("amputee").value;
   let muac = document.getElementById("muac").value;
+  let calfInput = parseFloat(document.getElementById("calf").value);
 
   let warnings = "";
 
@@ -118,14 +122,23 @@ function calc(){
     warnings += "⚠ Oedema may falsely increase weight.<br>";
   }
 
-  // MUAC fallback
-  if(muac === "yes"){
+  // MUAC or calf circumference pathway
+  if(muac === "yes" || calfInput){
+    let riskText = "";
+    if(calfInput){
+      riskText = calfInput >= 31 ? "Low risk" : "Increased risk";
+      warnings += `⚠ Calf circumference used as alternative pathway.<br>`;
+    } else {
+      riskText = ">23.5 cm = Low risk<br>≤23.5 cm = Increased risk";
+      warnings += "⚠ MUAC used as alternative pathway.<br>";
+    }
+
     document.getElementById("result").innerHTML =
       `<div class="box medium">
-        <b>USE MUAC PATHWAY</b><br><br>
-        >23.5 cm = Low risk<br>
-        ≤23.5 cm = Increased risk<br><br>
+        <b>Alternative Screening Pathway</b><br><br>
+        ${riskText}<br><br>
         <b>Action:</b> Consider dietitian referral if concerns
+        <div class="warning">${warnings}</div>
       </div>`;
     return;
   }
@@ -137,7 +150,7 @@ function calc(){
 
   // Amputee adjustment
   if(amputee === "yes"){
-    let adjustment = parseFloat(document.getElementById("amputeeType").value); // % missing
+    let adjustment = parseFloat(document.getElementById("amputeeType").value);
     w = w / (1 - adjustment/100);
     warnings += "⚠ Weight adjusted for amputation.<br>";
   }
@@ -198,7 +211,6 @@ function calc(){
     text = "<b>Refer to dietitian TODAY</b><br>Food + fluid chart<br>Consider supplements<br>Escalate if intake poor";
   }
 
-  // Display component scores + total
   document.getElementById("result").innerHTML =
     `<div class="box ${style}">
       <b>MUST Component Scores:</b><br>
