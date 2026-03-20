@@ -25,7 +25,8 @@
 
 <!-- SVUH Dietetics Logo -->
 <div style="text-align:center; margin-bottom:15px;">
-  <img src="IMG_4549.jpeg" alt="SVUH Dietetics" style="max-width:200px;">
+  <img src="https://raw.githubusercontent.com/USERNAME/REPO/main/IMG_4549.jpeg" 
+       alt="SVUH Dietetics" style="max-width:200px;">
 </div>
 
 <h2>MUST Screening Tool</h2>
