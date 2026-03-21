@@ -90,6 +90,7 @@
   <option value="100">Taking 100%</option>
   <option value="50">&le;50%</option>
   <option value="0">Charted but not taking</option>
+  <option value="-1">Not charted</option>
 </select>
 
 <button onclick="calc()">Calculate MUST</button>
@@ -179,11 +180,20 @@ function calc() {
     warnings += "⚠ Oedema may falsely elevate weight.<br>";
   }
 
+  // ONS intake warnings
   if(ons === "50"){
     warnings += "⚠ ONS intake ≤50%.<br>";
   } else if(ons === "0"){
     warnings += "⚠ Charted but not taking ONS.<br>";
+  } else if(ons === "-1"){
+    warnings += "⚠ ONS not charted.<br>";
   }
+
+  // Display results
+  let onsText = ons === "100" ? "Taking 100%" 
+               : ons === "50" ? "≤50%" 
+               : ons === "0" ? "Charted but not taking" 
+               : "Not charted";
 
   document.getElementById("result").innerHTML = `
     <div class="box">
@@ -194,7 +204,7 @@ function calc() {
       Weight Loss Score: ${wlScore}<br>
       Acute Disease Effect: ${acute === 2 ? "Yes" : "No"}<br>
       Intake: ${intake === "good" ? ">50% meals" : "<50% meals"}<br>
-      ONS Intake: ${ons === "100" ? "Taking 100%" : ons === "50" ? "≤50%" : "Charted but not taking"}<br><br>
+      ONS Intake: ${onsText}<br><br>
       <b>Action:</b> ${action}<br><br>
       <div class="warning">${warnings}</div>
     </div>
