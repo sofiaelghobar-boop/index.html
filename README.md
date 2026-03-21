@@ -13,9 +13,6 @@
     }
     button { background:#003087; color:white; border:none; }
     .box { padding:15px; border-radius:8px; margin-top:15px;}
-    .low { background:#d4edda;}
-    .medium { background:#fff3cd;}
-    .high { background:#f8d7da;}
     .warning { background:#e2e3e5; padding:10px; border-radius:6px; margin-top:10px;}
   </style>
 </head>
@@ -30,6 +27,10 @@
 <h2>SVUH MUST Screening Tool</h2>
 
 <h3>Patient Considerations</h3>
+
+<label>Age (years)</label>
+<input type="number" id="age" placeholder="Enter patient age">
+
 <label>Oedema?</label>
 <select id="oedema">
   <option value="no">No</option>
@@ -82,6 +83,13 @@
   <option value="poor">&lt;50% meals</option>
 </select>
 
+<h3>5. ONS Intake</h3>
+<select id="ons">
+  <option value="100">Taking 100%</option>
+  <option value="50">&le;50%</option>
+  <option value="0">Charted but not taking</option>
+</select>
+
 <button onclick="calc()">Calculate MUST</button>
 
 <div id="result"></div>
@@ -101,14 +109,16 @@ function calc() {
   let wlSelect = document.getElementById("weightLossSelect").value;
   let acute = parseInt(document.getElementById("acute").value);
   let intake = document.getElementById("intake").value;
+  let ons = document.getElementById("ons").value;
   let oedema = document.getElementById("oedema").value;
   let amputee = document.getElementById("amputee").value;
   let calf = parseFloat(document.getElementById("calf").value);
+  let age = parseInt(document.getElementById("age").value);
 
   let warnings = "";
 
-  if(!w){
-    alert("Enter weight");
+  if(!w || !age){
+    alert("Enter weight and age");
     return;
   }
 
@@ -137,23 +147,18 @@ function calc() {
   // --- MUST CALCULATION LOGIC ---
   // =============================
 
-  // BMI calculation
   let bmi = w / ((h/100)*(h/100));
+  let healthyRange = age < 65 ? "18.5–24.9" : "22–27";
 
-  // BMI categorisation
   let bmiCategory = bmi < 18.5 ? "Underweight"
                    : bmi < 25 ? "Healthy range"
                    : "Overweight";
 
-  // BMI scoring for MUST
-  // If oedema present, score at least 1
   let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 || oedema==="yes" ? 1 : 0);
 
-  // Weight loss scoring
   let wlScore = 0;
-  let percentLoss = 0;
   if(wlSelect === "auto" && prevW){
-    percentLoss = ((prevW - w)/prevW)*100;
+    let percentLoss = ((prevW - w)/prevW)*100;
     wlScore = percentLoss < 5 ? 0 : percentLoss < 10 ? 1 : 2;
   } else if(wlSelect === "unknown"){
     wlScore = 1;
@@ -162,35 +167,38 @@ function calc() {
     wlScore = parseInt(wlSelect);
   }
 
-  // Total MUST score
   let total = bmiScore + wlScore + acute;
 
-  // Action recommendation
   let action = total === 0 ? "Routine care"
              : total === 1 ? "Observe, food chart, review"
              : "Refer to dietitian";
 
-  // Intake warning
   if(intake === "poor"){
     warnings += "⚠ Intake <50% meals.<br>";
   }
 
-  // Oedema warning
   if(oedema === "yes"){
     warnings += "⚠ Oedema may falsely elevate weight.<br>";
   }
 
-  // --- Display result ---
+  // ONS intake warning
+  if(ons === "50"){
+    warnings += "⚠ ONS intake ≤50%.<br>";
+  } else if(ons === "0"){
+    warnings += "⚠ Charted but not taking ONS.<br>";
+  }
+
   document.getElementById("result").innerHTML = `
     <div class="box">
       <b>MUST Score: ${total}</b><br><br>
       BMI: ${bmi.toFixed(1)} (${bmiCategory})<br>
+      <b>Healthy BMI range for age ${age}:</b> ${healthyRange}<br>
       BMI Score: ${bmiScore}<br>
       Weight Loss Score: ${wlScore}<br>
       Acute Illness Score: ${acute}<br>
-      Intake: ${intake === "good" ? ">50% meals" : "<50% meals"}<br><br>
+      Intake: ${intake === "good" ? ">50% meals" : "<50% meals"}<br>
+      ONS Intake: ${ons === "100" ? "Taking 100%" : ons === "50" ? "≤50%" : "Charted but not taking"}<br><br>
       <b>Action:</b> ${action}<br><br>
-      <i>Note: In older adults, BMI interpretation may differ; interpret clinically.</i><br><br>
       <div class="warning">${warnings}</div>
     </div>
   `;
