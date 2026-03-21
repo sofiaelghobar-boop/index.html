@@ -22,7 +22,7 @@
 
 <body>
 
-<!-- Logo -->
+<!-- SVUH Logo -->
 <div style="text-align:center; margin-bottom:15px;">
   <img src="IMG_4549.jpeg" alt="SVUH Dietetics Logo" style="max-width:200px;">
 </div>
@@ -30,7 +30,6 @@
 <h2>SVUH MUST Screening Tool</h2>
 
 <h3>Patient Considerations</h3>
-
 <label>Oedema?</label>
 <select id="oedema">
   <option value="no">No</option>
@@ -94,6 +93,7 @@ function showAmputeeType() {
 }
 
 function calc() {
+  // --- Gather inputs ---
   let w = parseFloat(document.getElementById("weight").value);
   let hInput = parseFloat(document.getElementById("height").value);
   let ulnaInput = parseFloat(document.getElementById("ulna").value);
@@ -112,14 +112,14 @@ function calc() {
     return;
   }
 
-  // Amputee adjustment
+  // --- Amputee adjustment ---
   if(amputee === "yes"){
     let adj = parseFloat(document.getElementById("amputeeType").value);
     w = w / (1 - adj/100);
     warnings += "⚠ Weight adjusted for amputation.<br>";
   }
 
-  // Height
+  // --- Height estimation via ulna ---
   let h;
   if(!hInput && ulnaInput){
     h = ulnaInput*4.67 + 70.9;
@@ -133,20 +133,25 @@ function calc() {
     return;
   }
 
-  // BMI
+  // =============================
+  // --- MUST CALCULATION LOGIC ---
+  // =============================
+
+  // BMI calculation
   let bmi = w / ((h/100)*(h/100));
 
-  // BMI category
+  // BMI categorisation
   let bmiCategory = bmi < 18.5 ? "Underweight"
                    : bmi < 25 ? "Healthy range"
                    : "Overweight";
 
-  let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 ? 1 : 0);
+  // BMI scoring for MUST
+  // If oedema present, score at least 1
+  let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 || oedema==="yes" ? 1 : 0);
 
-  // Weight loss score
+  // Weight loss scoring
   let wlScore = 0;
   let percentLoss = 0;
-
   if(wlSelect === "auto" && prevW){
     percentLoss = ((prevW - w)/prevW)*100;
     wlScore = percentLoss < 5 ? 0 : percentLoss < 10 ? 1 : 2;
@@ -160,7 +165,7 @@ function calc() {
   // Total MUST score
   let total = bmiScore + wlScore + acute;
 
-  // Action text
+  // Action recommendation
   let action = total === 0 ? "Routine care"
              : total === 1 ? "Observe, food chart, review"
              : "Refer to dietitian";
@@ -175,6 +180,7 @@ function calc() {
     warnings += "⚠ Oedema may falsely elevate weight.<br>";
   }
 
+  // --- Display result ---
   document.getElementById("result").innerHTML = `
     <div class="box">
       <b>MUST Score: ${total}</b><br><br>
