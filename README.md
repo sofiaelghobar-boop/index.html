@@ -147,16 +147,16 @@ function calc() {
 
   // BMI calculation
   let bmi = w / ((h/100)*(h/100));
-  let bmiCategory = "";
+  let bmiLabel = ""; // only show 'Underweight' when applicable
   let bmiScore = 0;
 
   if(age >= 65){
-    if(bmi < 20){ bmiCategory = "Underweight"; bmiScore = 2; }
+    if(bmi < 20){ bmiLabel = "Underweight"; bmiScore = 2; }
   } else {
-    if(bmi < 18.5){ bmiCategory = "Underweight"; bmiScore = 2; }
+    if(bmi < 18.5){ bmiLabel = "Underweight"; bmiScore = 2; }
   }
 
-  // Add oedema
+  // Add oedema score
   if(oedema === "yes"){ bmiScore += 1; warnings += "⚠ BMI score increased due to oedema.<br>"; }
 
   // Weight loss score
@@ -192,7 +192,7 @@ function calc() {
   document.getElementById("result").innerHTML = `
     <div class="box">
       <b>MUST Score: ${total}</b><br><br>
-      BMI: ${bmi.toFixed(1)} ${bmiCategory ? '('+bmiCategory+')' : ''}<br>
+      BMI: ${bmi.toFixed(1)} ${bmiLabel ? '('+bmiLabel+')' : ''}<br>
       BMI Score: ${bmiScore}<br>
       Weight Loss Score: ${wlScore}<br>
       Acute Disease Effect: ${acute === 2 ? "Yes" : "No"}<br>
