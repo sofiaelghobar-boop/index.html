@@ -97,6 +97,11 @@
 
 <div id="result"></div>
 
+<div class="small">
+  <b>Disclaimer for Older Adults (≥65 years):</b>  
+  Healthy BMI range: 22–27. BMI <20 is considered increased nutritional risk. MUST score interpretation should be applied with caution in older adults.
+</div>
+
 <script>
 function showAmputeeType() {
   document.getElementById("amputeeDiv").style.display =
@@ -145,16 +150,13 @@ function calc() {
     return;
   }
 
-  // BMI calculation
+  // BMI calculation and MUST scoring
   let bmi = w / ((h/100)*(h/100));
-  let bmiLabel = ""; // only show 'Underweight' when applicable
   let bmiScore = 0;
 
-  if(age >= 65){
-    if(bmi < 20){ bmiLabel = "Underweight"; bmiScore = 2; }
-  } else {
-    if(bmi < 18.5){ bmiLabel = "Underweight"; bmiScore = 2; }
-  }
+  if(bmi < 18.5) bmiScore = 2;
+  else if(bmi < 20) bmiScore = 1;
+  else bmiScore = 0;
 
   // Add oedema score
   if(oedema === "yes"){ bmiScore += 1; warnings += "⚠ BMI score increased due to oedema.<br>"; }
@@ -192,7 +194,7 @@ function calc() {
   document.getElementById("result").innerHTML = `
     <div class="box">
       <b>MUST Score: ${total}</b><br><br>
-      BMI: ${bmi.toFixed(1)} ${bmiLabel ? '('+bmiLabel+')' : ''}<br>
+      BMI: ${bmi.toFixed(1)}<br>
       BMI Score: ${bmiScore}<br>
       Weight Loss Score: ${wlScore}<br>
       Acute Disease Effect: ${acute === 2 ? "Yes" : "No"}<br>
