@@ -14,6 +14,7 @@
     button { background:#003087; color:white; border:none; }
     .box { padding:15px; border-radius:8px; margin-top:15px;}
     .warning { background:#e2e3e5; padding:10px; border-radius:6px; margin-top:10px;}
+    .small { font-size:12px; color:#555; margin-bottom:8px; }
   </style>
 </head>
 
@@ -71,11 +72,12 @@
   <option value="unknown">Unknown</option>
 </select>
 
-<h3>3. Acute Illness</h3>
+<h3>3. Acute Disease Effect</h3>
 <select id="acute">
   <option value="0">No</option>
-  <option value="2">Yes (no intake &gt;5 days)</option>
+  <option value="2">Yes</option>
 </select>
+<div class="small">MUST: Consider patients with acute disease where there has been or is likely to be no nutritional intake for &gt;5 days.</div>
 
 <h3>4. Intake</h3>
 <select id="intake">
@@ -101,7 +103,6 @@ function showAmputeeType() {
 }
 
 function calc() {
-  // --- Gather inputs ---
   let w = parseFloat(document.getElementById("weight").value);
   let hInput = parseFloat(document.getElementById("height").value);
   let ulnaInput = parseFloat(document.getElementById("ulna").value);
@@ -122,14 +123,14 @@ function calc() {
     return;
   }
 
-  // --- Amputee adjustment ---
+  // Amputee adjustment
   if(amputee === "yes"){
     let adj = parseFloat(document.getElementById("amputeeType").value);
     w = w / (1 - adj/100);
     warnings += "⚠ Weight adjusted for amputation.<br>";
   }
 
-  // --- Height estimation via ulna ---
+  // Height estimation
   let h;
   if(!hInput && ulnaInput){
     h = ulnaInput*4.67 + 70.9;
@@ -143,10 +144,7 @@ function calc() {
     return;
   }
 
-  // =============================
-  // --- MUST CALCULATION LOGIC ---
-  // =============================
-
+  // BMI calculation
   let bmi = w / ((h/100)*(h/100));
   let healthyRange = age < 65 ? "18.5–24.9" : "22–27";
 
@@ -181,7 +179,6 @@ function calc() {
     warnings += "⚠ Oedema may falsely elevate weight.<br>";
   }
 
-  // ONS intake warning
   if(ons === "50"){
     warnings += "⚠ ONS intake ≤50%.<br>";
   } else if(ons === "0"){
@@ -195,7 +192,7 @@ function calc() {
       <b>Healthy BMI range for age ${age}:</b> ${healthyRange}<br>
       BMI Score: ${bmiScore}<br>
       Weight Loss Score: ${wlScore}<br>
-      Acute Illness Score: ${acute}<br>
+      Acute Disease Effect: ${acute === 2 ? "Yes" : "No"}<br>
       Intake: ${intake === "good" ? ">50% meals" : "<50% meals"}<br>
       ONS Intake: ${ons === "100" ? "Taking 100%" : ons === "50" ? "≤50%" : "Charted but not taking"}<br><br>
       <b>Action:</b> ${action}<br><br>
