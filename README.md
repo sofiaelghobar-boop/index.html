@@ -147,18 +147,29 @@ function calc() {
 
   // BMI calculation
   let bmi = w / ((h/100)*(h/100));
-  let healthyRange = age < 65 ? "18.5–24.9" : "22–27";
+  let healthyRange, bmiCategory, bmiScore;
 
-  let bmiCategory = bmi < 18.5 ? "Underweight"
-                   : bmi < 25 ? "Healthy range"
-                   : "Overweight";
+  if(age >= 65){
+    healthyRange = "22–27";
+    if(bmi < 20){ bmiCategory = "Underweight"; bmiScore = 2; }
+    else if(bmi <= 27){ bmiCategory = "Healthy"; bmiScore = 0; }
+    else{ bmiCategory = "Overweight"; bmiScore = 0; }
+  } else {
+    healthyRange = "18.5–24.9";
+    if(bmi < 18.5){ bmiCategory = "Underweight"; bmiScore = 2; }
+    else if(bmi <= 24.9){ bmiCategory = "Healthy"; bmiScore = 0; }
+    else{ bmiCategory = "Overweight"; bmiScore = 0; }
+  }
 
-  let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 || oedema==="yes" ? 1 : 0);
+  // Add oedema
+  if(oedema === "yes"){ bmiScore += 1; warnings += "⚠ BMI score increased due to oedema.<br>"; }
 
+  // Weight loss score
   let wlScore = 0;
   if(wlSelect === "auto" && prevW){
     let percentLoss = ((prevW - w)/prevW)*100;
     wlScore = percentLoss < 5 ? 0 : percentLoss < 10 ? 1 : 2;
+    warnings += `Weight loss: ${percentLoss.toFixed(1)}%<br>`;
   } else if(wlSelect === "unknown"){
     wlScore = 1;
     warnings += "⚠ Weight loss unknown.<br>";
@@ -166,34 +177,22 @@ function calc() {
     wlScore = parseInt(wlSelect);
   }
 
+  // Total MUST score
   let total = bmiScore + wlScore + acute;
 
   let action = total === 0 ? "Routine care"
              : total === 1 ? "Observe, food chart, review"
              : "Refer to dietitian";
 
-  if(intake === "poor"){
-    warnings += "⚠ Intake <50% meals.<br>";
-  }
+  // Intake warning
+  if(intake === "poor"){ warnings += "⚠ Intake <50% meals.<br>"; }
 
-  if(oedema === "yes"){
-    warnings += "⚠ Oedema may falsely elevate weight.<br>";
-  }
-
-  // ONS intake warnings
-  if(ons === "50"){
-    warnings += "⚠ ONS intake ≤50%.<br>";
-  } else if(ons === "0"){
-    warnings += "⚠ Charted but not taking ONS.<br>";
-  } else if(ons === "-1"){
-    warnings += "⚠ ONS not charted.<br>";
-  }
-
-  // Display results
-  let onsText = ons === "100" ? "Taking 100%" 
-               : ons === "50" ? "≤50%" 
-               : ons === "0" ? "Charted but not taking" 
-               : "Not charted";
+  // ONS intake warning
+  let onsText;
+  if(ons === "100"){ onsText = "Taking 100%"; }
+  else if(ons === "50"){ onsText = "≤50%"; warnings += "⚠ ONS intake ≤50%.<br>"; }
+  else if(ons === "0"){ onsText = "Charted but not taking"; warnings += "⚠ Charted but not taking ONS.<br>"; }
+  else{ onsText = "Not charted"; warnings += "⚠ ONS not charted.<br>"; }
 
   document.getElementById("result").innerHTML = `
     <div class="box">
