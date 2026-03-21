@@ -147,18 +147,13 @@ function calc() {
 
   // BMI calculation
   let bmi = w / ((h/100)*(h/100));
-  let healthyRange, bmiCategory, bmiScore;
+  let bmiCategory = "";
+  let bmiScore = 0;
 
   if(age >= 65){
-    healthyRange = "22–27";
     if(bmi < 20){ bmiCategory = "Underweight"; bmiScore = 2; }
-    else if(bmi <= 27){ bmiCategory = "Healthy"; bmiScore = 0; }
-    else{ bmiCategory = "Overweight"; bmiScore = 0; }
   } else {
-    healthyRange = "18.5–24.9";
     if(bmi < 18.5){ bmiCategory = "Underweight"; bmiScore = 2; }
-    else if(bmi <= 24.9){ bmiCategory = "Healthy"; bmiScore = 0; }
-    else{ bmiCategory = "Overweight"; bmiScore = 0; }
   }
 
   // Add oedema
@@ -197,8 +192,7 @@ function calc() {
   document.getElementById("result").innerHTML = `
     <div class="box">
       <b>MUST Score: ${total}</b><br><br>
-      BMI: ${bmi.toFixed(1)} (${bmiCategory})<br>
-      <b>Healthy BMI range for age ${age}:</b> ${healthyRange}<br>
+      BMI: ${bmi.toFixed(1)} ${bmiCategory ? '('+bmiCategory+')' : ''}<br>
       BMI Score: ${bmiScore}<br>
       Weight Loss Score: ${wlScore}<br>
       Acute Disease Effect: ${acute === 2 ? "Yes" : "No"}<br>
