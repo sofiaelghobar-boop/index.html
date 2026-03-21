@@ -22,16 +22,13 @@
 
 <body>
 
-<!-- LOGO -->
 <div style="text-align:center;">
   <img src="IMG_4549.jpeg" style="max-width:200px;">
 </div>
 
 <h2>SVUH MUST Screening Tool</h2>
 
-<h3>Patient Considerations</h3>
-
-<label>Oedema / fluid overload?</label>
+<label>Oedema?</label>
 <select id="oedema">
   <option value="no">No</option>
   <option value="yes">Yes</option>
@@ -44,7 +41,6 @@
 </select>
 
 <div id="amputeeDiv" style="display:none;">
-  <label>Type of amputation</label>
   <select id="amputeeType">
     <option value="16">Entire leg</option>
     <option value="6">Lower leg</option>
@@ -55,41 +51,40 @@
   </select>
 </div>
 
-<h3>1. Measurements</h3>
+<h3>Measurements</h3>
+<input id="weight" type="number" placeholder="Weight (kg)">
+<input id="height" type="number" placeholder="Height (cm)">
+<input id="ulna" type="number" placeholder="Ulna (optional)">
+<input id="calf" type="number" placeholder="Calf (optional)">
 
-<input type="number" id="weight" placeholder="Weight (kg)">
-<input type="number" id="height" placeholder="Height (cm)">
-<input type="number" id="ulna" placeholder="Ulna length (cm optional)">
-<input type="number" id="calf" placeholder="Calf circumference (cm optional)">
-
-<h3>2. Weight Loss</h3>
-
-<input type="number" id="prevWeight" placeholder="Previous weight">
+<h3>Weight Loss</h3>
+<input id="prevWeight" type="number" placeholder="Previous weight">
 <select id="weightLossSelect">
-  <option value="auto">Calculate automatically</option>
-  <option value="0">&lt;5%</option>
+  <option value="auto">Auto</option>
+  <option value="0"><5%</option>
   <option value="1">5–10%</option>
-  <option value="2">&gt;10%</option>
+  <option value="2">>10%</option>
   <option value="unknown">Unknown</option>
 </select>
 
-<h3>3. Acute Illness</h3>
+<h3>Acute</h3>
 <select id="acute">
   <option value="0">No</option>
-  <option value="2">Yes (no intake >5 days)</option>
+  <option value="2">Yes</option>
 </select>
 
-<h3>4. Intake</h3>
+<h3>Intake</h3>
 <select id="intake">
-  <option value="good">>50% meals</option>
-  <option value="poor"><50% meals</option>
+  <option value="good">&gt;50% meals</option>
+  <option value="poor">&lt;50% meals</option>
 </select>
 
-<button onclick="calc()">Calculate MUST</button>
+<button onclick="calc()">Calculate</button>
 
 <div id="result"></div>
 
 <script>
+
 function showAmputeeType(){
   document.getElementById("amputeeDiv").style.display =
     document.getElementById("amputee").value==="yes" ? "block" : "none";
@@ -98,8 +93,8 @@ function showAmputeeType(){
 function calc(){
 
   let w = parseFloat(document.getElementById("weight").value);
-  let hInput = parseFloat(document.getElementById("height").value);
-  let ulnaInput = parseFloat(document.getElementById("ulna").value);
+  let h = parseFloat(document.getElementById("height").value);
+  let ulna = parseFloat(document.getElementById("ulna").value);
   let prevW = parseFloat(document.getElementById("prevWeight").value);
   let wlSelect = document.getElementById("weightLossSelect").value;
   let acute = parseInt(document.getElementById("acute").value);
@@ -110,27 +105,19 @@ function calc(){
 
   let warnings = "";
 
-  if(oedema === "yes"){
-    warnings += "⚠ Oedema may falsely elevate weight.<br>";
-  }
-
   if(!w){
     alert("Enter weight");
     return;
   }
 
-  if(amputee === "yes"){
+  if(amputee==="yes"){
     let adj = parseFloat(document.getElementById("amputeeType").value);
-    w = w / (1 - adj/100);
-    warnings += "⚠ Weight adjusted for amputation.<br>";
+    w = w/(1-adj/100);
   }
 
-  let h;
-  if(!hInput && ulnaInput){
-    h = ulnaInput*4.67 + 70.9;
-    warnings += "⚠ Height estimated from ulna length.<br>";
-  } else {
-    h = hInput;
+  if(!h && ulna){
+    h = ulna*4.67+70.9;
+    warnings += "Height estimated<br>";
   }
 
   if(!h){
@@ -138,68 +125,39 @@ function calc(){
     return;
   }
 
-  let bmi = w / ((h/100)*(h/100));
+  let bmi = w/((h/100)*(h/100));
+  let bmiScore = bmi<18.5?2:(bmi<20?1:0);
 
-  // BMI category
-  let bmiCategory = "";
-  if(bmi < 18.5) bmiCategory = "Underweight";
-  else if(bmi < 25) bmiCategory = "Healthy range";
-  else bmiCategory = "Overweight";
-
-  let bmiScore = bmi < 18.5 ? 2 : (bmi < 20 ? 1 : 0);
-
-  // Weight loss
   let wlScore = 0;
   let percentLoss = 0;
 
-  if(wlSelect === "auto" && prevW){
-    percentLoss = ((prevW - w) / prevW) * 100;
-    if(percentLoss < 5) wlScore = 0;
-    else if(percentLoss < 10) wlScore = 1;
-    else wlScore = 2;
-  } else if(wlSelect === "unknown"){
-    wlScore = 1;
-    warnings += "⚠ Weight loss unknown.<br>";
+  if(wlSelect==="auto" && prevW){
+    percentLoss=((prevW-w)/prevW)*100;
+    wlScore = percentLoss<5?0:(percentLoss<10?1:2);
+  } else if(wlSelect==="unknown"){
+    wlScore=1;
   } else {
-    wlScore = parseInt(wlSelect);
+    wlScore=parseInt(wlSelect);
   }
 
-  let total = bmiScore + wlScore + acute;
+  let total=bmiScore+wlScore+acute;
 
-  let style = total===0?"low":(total===1?"medium":"high");
+  let phenotypic = (percentLoss>5)||(bmi<20)||(calf && calf<31);
+  let etiologic = (intake==="poor")||(acute===2);
 
-  let action = total===0 ? "Routine care"
-             : total===1 ? "Observe, food chart, review"
-             : "Refer to dietitian";
-
-  // GLIM
-  let phenotypic = (percentLoss > 5) || (bmi < 20) || (calf && calf < 31);
-  let etiologic = (intake === "poor") || (acute === 2);
-
-  let glimText = (phenotypic && etiologic)
-    ? "<b style='color:red;'>GLIM criteria met (malnutrition likely)</b>"
-    : "GLIM criteria not fully met";
+  let glim = (phenotypic && etiologic)
+    ? "GLIM criteria met"
+    : "GLIM not met";
 
   document.getElementById("result").innerHTML =
-    `<div class="box ${style}">
-      <b>MUST Score: ${total}</b><br><br>
-
-      BMI: ${bmi.toFixed(1)} (${bmiCategory})<br>
-      BMI Score: ${bmiScore}<br>
-      Weight Loss Score: ${wlScore}<br>
-      Acute Score: ${acute}<br><br>
-
-      <b>Intake:</b> ${intake === "good" ? ">50% meals" : "<50% meals"}<br><br>
-
-      <b>Action:</b> ${action}<br><br>
-
-      <b>GLIM:</b><br>${glimText}<br><br>
-
-      <i>Note: In older adults, higher BMI may still be acceptable; interpret clinically.</i>
-
-      <div class="warning">${warnings}</div>
+    `<div class="box">
+    MUST Score: ${total}<br>
+    BMI: ${bmi.toFixed(1)}<br>
+    Intake: ${intake==="good"?">50%":"<50%"}<br><br>
+    ${glim}
     </div>`;
 }
+
 </script>
 
 </body>
